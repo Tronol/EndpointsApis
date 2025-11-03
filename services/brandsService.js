@@ -1,94 +1,101 @@
-const faker = require('faker');
-
 class BrandsService {
   constructor() {
-    this.brands = [];
-    this.generateData();
+    console.log('BrandsService inicializado');
   }
 
-  generateData() {
-    console.log('Generando datos de marcas...');
-    for (let i = 0; i < 50; i++) {
-      this.brands.push({
-        id: String(i + 1),
-        brandName: faker.company.companyName(),
-        description: faker.company.catchPhrase(),
-        active: faker.datatype.boolean(),
-      });
-    }
-    console.log('Datos de marcas generados exitosamente');
+  async getBrands() {
+    return new Promise((resolve) => {
+      resolve(global.brands);
+    });
   }
 
-  getBrands() {
-    return this.brands;
+  async getBrandById(id) {
+    return new Promise((resolve) => {
+      const brand = global.brands.find(item => item.id === id);
+      resolve(brand || null);
+    });
   }
 
-  getBrandById(id) {
-    const brand = this.brands.find(item => item.id === id);
-    return brand || null;
+  async createBrand(brandData) {
+    return new Promise((resolve, reject) => {
+      if (!brandData.brandName) {
+        reject(new Error('brandName es requerido'));
+        return;
+      }
+
+      const newBrand = {
+        id: String(global.brands.length + 1),
+        brandName: brandData.brandName,
+        description: brandData.description || '',
+        active: brandData.active !== undefined ? brandData.active : true
+      };
+
+      global.brands.push(newBrand);
+      resolve(newBrand);
+    });
   }
 
-  createBrand(brandData) {
-    // Validar que brandName esté presente
-    if (!brandData.brandName) {
-      throw new Error('brandName es requerido');
-    }
+  async updateBrand(id, changes) {
+    return new Promise((resolve, reject) => {
+      const index = global.brands.findIndex(item => item.id === id);
+      if (index === -1) {
+        reject(new Error('Marca no encontrada'));
+        return;
+      }
 
-    const newBrand = {
-      id: String(this.brands.length + 1),
-      brandName: brandData.brandName,
-      description: brandData.description || '',
-      active: brandData.active !== undefined ? brandData.active : true
-    };
-    this.brands.push(newBrand);
-    return newBrand;
+      if (changes.brandName !== undefined && !changes.brandName) {
+        reject(new Error('brandName es requerido'));
+        return;
+      }
+
+      const updatedBrand = {
+        ...global.brands[index],
+        ...changes
+      };
+      global.brands[index] = updatedBrand;
+      resolve(updatedBrand);
+    });
   }
 
-  updateBrand(id, changes) {
-    const index = this.brands.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw new Error('Marca no encontrada');
-    }
+  async patchBrand(id, changes) {
+    return new Promise((resolve, reject) => {
+      const index = global.brands.findIndex(item => item.id === id);
+      if (index === -1) {
+        reject(new Error('Marca no encontrada'));
+        return;
+      }
 
-    // Validar que brandName esté presente si se está actualizando
-    if (changes.brandName !== undefined && !changes.brandName) {
-      throw new Error('brandName es requerido');
-    }
+      if (changes.brandName !== undefined && !changes.brandName) {
+        reject(new Error('brandName no puede estar vacío'));
+        return;
+      }
 
-    const updatedBrand = {
-      ...this.brands[index],
-      ...changes
-    };
-    this.brands[index] = updatedBrand;
-    return updatedBrand;
+      const patchedBrand = {
+        ...global.brands[index],
+        ...changes
+      };
+      global.brands[index] = patchedBrand;
+      resolve(patchedBrand);
+    });
   }
 
-  patchBrand(id, changes) {
-    const index = this.brands.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw new Error('Marca no encontrada');
-    }
+  async deleteBrand(id) {
+    return new Promise((resolve, reject) => {
+      const index = global.brands.findIndex(item => item.id === id);
+      if (index === -1) {
+        reject(new Error('Marca no encontrada'));
+        return;
+      }
 
-    // Validar que brandName no sea vacío si se está actualizando
-    if (changes.brandName !== undefined && !changes.brandName) {
-      throw new Error('brandName no puede estar vacío');
-    }
+      const hasAssociatedProducts = global.products.some(product => product.brandId === id);
+      if (hasAssociatedProducts) {
+        reject(new Error('No se puede eliminar la marca porque tiene productos asociados'));
+        return;
+      }
 
-    const patchedBrand = {
-      ...this.brands[index],
-      ...changes
-    };
-    this.brands[index] = patchedBrand;
-    return patchedBrand;
-  }
-
-  deleteBrand(id) {
-    const index = this.brands.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw new Error('Marca no encontrada');
-    }
-    const deletedBrand = this.brands.splice(index, 1)[0];
-    return deletedBrand;
+      const deletedBrand = global.brands.splice(index, 1)[0];
+      resolve(deletedBrand);
+    });
   }
 }
 

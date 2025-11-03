@@ -1,9 +1,11 @@
 const faker = require('faker');
+
 function generateData() {
   console.log('Generando datos...');
-  // Generar brands con IDs locales
+
+  // Generar brands con IDs locales - DIRECTAMENTE en global
   global.brands = [];
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 50; i++) {
     global.brands.push({
       id: String(i+1),
       brandName: faker.company.companyName(),
@@ -11,9 +13,10 @@ function generateData() {
       active: faker.datatype.boolean(),
     });
   }
-  // Generar categories con IDs locales
+
+  // Generar categories con IDs locales - DIRECTAMENTE en global
   global.categories = [];
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 50; i++) {
     global.categories.push({
       id: String(i+1),
       categoryName: faker.commerce.department(),
@@ -21,9 +24,10 @@ function generateData() {
       active: faker.datatype.boolean(),
     });
   }
-  // Generar products con IDs locales
+
+  // Generar products con IDs locales - DIRECTAMENTE en global
   global.products = [];
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 100; i++) {
     const randomBrand = global.brands[Math.floor(Math.random() * global.brands.length)];
     const randomCategory = global.categories[Math.floor(Math.random() * global.categories.length)];
     global.products.push({
@@ -37,9 +41,10 @@ function generateData() {
       brandId: randomBrand.id,
     });
   }
-  // Generar users con IDs locales
+
+  // Generar users con IDs locales - DIRECTAMENTE en global
   global.users = [];
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 50; i++) {
     global.users.push({
       id: String(i+1),
       name: faker.name.findName(),
@@ -49,24 +54,12 @@ function generateData() {
       active: faker.datatype.boolean(),
     });
   }
-  // Generar movies con IDs locales
-  global.movies = [];
-  for (let i = 0; i < 100; i++) {
-    global.movies.push({
-      id: `MOV${String(i+1)}`,
-      title: faker.lorem.words(3),
-      director: faker.name.findName(),
-      year: faker.datatype.number({ min: 1950, max: 2023 }),
-      genre: faker.random.arrayElement(['Action', 'Drama', 'Comedy', 'Horror', 'Sci-Fi']),
-      duration: faker.datatype.number({ min: 60, max: 180 })
-    });
-  }
+
   console.log('Datos generados exitosamente');
   console.log('Brands:', global.brands.length);
   console.log('Categories:', global.categories.length);
   console.log('Products:', global.products.length);
   console.log('Users:', global.users.length);
-  console.log('Movies:', global.movies.length);
 }
 
 module.exports = generateData;

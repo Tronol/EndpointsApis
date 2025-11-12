@@ -5,7 +5,7 @@ function generateData() {
 
   // Generar brands con IDs locales - DIRECTAMENTE en global
   global.brands = [];
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 20; i++) {
     global.brands.push({
       id: String(i+1),
       brandName: faker.company.companyName(),
@@ -16,7 +16,7 @@ function generateData() {
 
   // Generar categories con IDs locales - DIRECTAMENTE en global
   global.categories = [];
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 20; i++) {
     global.categories.push({
       id: String(i+1),
       categoryName: faker.commerce.department(),
@@ -27,7 +27,7 @@ function generateData() {
 
   // Generar products con IDs locales - DIRECTAMENTE en global
   global.products = [];
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 30; i++) {
     const randomBrand = global.brands[Math.floor(Math.random() * global.brands.length)];
     const randomCategory = global.categories[Math.floor(Math.random() * global.categories.length)];
     global.products.push({
@@ -36,7 +36,7 @@ function generateData() {
       price: faker.commerce.price(),
       image: faker.image.imageUrl(),
       description: faker.commerce.productDescription(),
-      stock: faker.datatype.number({ 'min': 0, 'max': 100 }),
+      stock: faker.datatype.number({ 'min': 0, 'max': 30 }),
       categoryId: randomCategory.id,
       brandId: randomBrand.id,
     });
@@ -44,7 +44,7 @@ function generateData() {
 
   // Generar users con IDs locales - DIRECTAMENTE en global
   global.users = [];
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 20; i++) {
     global.users.push({
       id: String(i+1),
       name: faker.name.findName(),

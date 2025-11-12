@@ -1,88 +1,104 @@
+const User = require('../models/User'); // Asegúrate de que la ruta sea correcta
+
 class UsersService {
   constructor() {
-    console.log('UsersService inicializado');
+    console.log('UsersService inicializado con MongoDB');
   }
 
   async getUsers() {
-    return new Promise((resolve) => {
-      resolve(global.users);
-    });
+    try {
+      const users = await User.find();
+      return users;
+    } catch (error) {
+      throw new Error('Error al obtener usuarios: ' + error.message);
+    }
   }
 
   async getUserById(id) {
-    return new Promise((resolve) => {
-      const user = global.users.find(item => item.id === id);
-      resolve(user || null);
-    });
+    try {
+      const user = await User.findById(id);
+      return user || null;
+    } catch (error) {
+      throw new Error('Error al obtener usuario: ' + error.message);
+    }
   }
 
   async createUser(userData) {
-    return new Promise((resolve, reject) => {
-      const existingUser = global.users.find(u => u.email === userData.email);
+    try {
+      const existingUser = await User.findOne({
+        $or: [
+          { email: userData.email },
+          { username: userData.username }
+        ]
+      });
+
       if (existingUser) {
-        reject(new Error('El email ya está en uso'));
-        return;
+        throw new Error('El email o username ya está en uso');
       }
 
-      const newUser = {
-        id: String(global.users.length + 1),
+      const newUser = new User({
         name: userData.name,
         email: userData.email,
-        username: userData.username || '',
-        password: userData.password || '',
+        username: userData.username,
+        password: userData.password,
         active: userData.active !== undefined ? userData.active : true
-      };
+      });
 
-      global.users.push(newUser);
-      resolve(newUser);
-    });
+      await newUser.save();
+      return newUser;
+    } catch (error) {
+      throw new Error('Error al crear usuario: ' + error.message);
+    }
   }
 
   async updateUser(id, changes) {
-    return new Promise((resolve, reject) => {
-      const index = global.users.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Usuario no encontrado'));
-        return;
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        changes,
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedUser) {
+        throw new Error('Usuario no encontrado');
       }
 
-      const updatedUser = {
-        ...global.users[index],
-        ...changes
-      };
-      global.users[index] = updatedUser;
-      resolve(updatedUser);
-    });
+      return updatedUser;
+    } catch (error) {
+      throw new Error('Error al actualizar usuario: ' + error.message);
+    }
   }
 
   async patchUser(id, changes) {
-    return new Promise((resolve, reject) => {
-      const index = global.users.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Usuario no encontrado'));
-        return;
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        { $set: changes },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedUser) {
+        throw new Error('Usuario no encontrado');
       }
 
-      const updatedUser = {
-        ...global.users[index],
-        ...changes
-      };
-      global.users[index] = updatedUser;
-      resolve(updatedUser);
-    });
+      return updatedUser;
+    } catch (error) {
+      throw new Error('Error al actualizar usuario: ' + error.message);
+    }
   }
 
   async deleteUser(id) {
-    return new Promise((resolve, reject) => {
-      const index = global.users.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Usuario no encontrado'));
-        return;
+    try {
+      const deletedUser = await User.findByIdAndDelete(id);
+
+      if (!deletedUser) {
+        throw new Error('Usuario no encontrado');
       }
 
-      const deletedUser = global.users.splice(index, 1)[0];
-      resolve(deletedUser);
-    });
+      return deletedUser;
+    } catch (error) {
+      throw new Error('Error al eliminar usuario: ' + error.message);
+    }
   }
 }
 

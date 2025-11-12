@@ -1,101 +1,109 @@
+const Brand = require('../models/Brand'); // Asegúrate de que la ruta sea correcta
+const Product = require('../models/Product');
+
 class BrandsService {
   constructor() {
-    console.log('BrandsService inicializado');
+    console.log('BrandsService inicializado con MongoDB');
   }
 
   async getBrands() {
-    return new Promise((resolve) => {
-      resolve(global.brands);
-    });
+    try {
+      const brands = await Brand.find();
+      return brands;
+    } catch (error) {
+      throw new Error('Error al obtener marcas: ' + error.message);
+    }
   }
 
   async getBrandById(id) {
-    return new Promise((resolve) => {
-      const brand = global.brands.find(item => item.id === id);
-      resolve(brand || null);
-    });
+    try {
+      const brand = await Brand.findById(id);
+      return brand || null;
+    } catch (error) {
+      throw new Error('Error al obtener marca: ' + error.message);
+    }
   }
 
   async createBrand(brandData) {
-    return new Promise((resolve, reject) => {
+    try {
       if (!brandData.brandName) {
-        reject(new Error('brandName es requerido'));
-        return;
+        throw new Error('brandName es requerido');
       }
 
-      const newBrand = {
-        id: String(global.brands.length + 1),
+      const newBrand = new Brand({
         brandName: brandData.brandName,
         description: brandData.description || '',
         active: brandData.active !== undefined ? brandData.active : true
-      };
+      });
 
-      global.brands.push(newBrand);
-      resolve(newBrand);
-    });
+      await newBrand.save();
+      return newBrand;
+    } catch (error) {
+      throw new Error('Error al crear marca: ' + error.message);
+    }
   }
 
   async updateBrand(id, changes) {
-    return new Promise((resolve, reject) => {
-      const index = global.brands.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Marca no encontrada'));
-        return;
-      }
-
+    try {
       if (changes.brandName !== undefined && !changes.brandName) {
-        reject(new Error('brandName es requerido'));
-        return;
+        throw new Error('brandName es requerido');
       }
 
-      const updatedBrand = {
-        ...global.brands[index],
-        ...changes
-      };
-      global.brands[index] = updatedBrand;
-      resolve(updatedBrand);
-    });
+      const updatedBrand = await Brand.findByIdAndUpdate(
+        id,
+        changes,
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedBrand) {
+        throw new Error('Marca no encontrada');
+      }
+
+      return updatedBrand;
+    } catch (error) {
+      throw new Error('Error al actualizar marca: ' + error.message);
+    }
   }
 
   async patchBrand(id, changes) {
-    return new Promise((resolve, reject) => {
-      const index = global.brands.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Marca no encontrada'));
-        return;
-      }
-
+    try {
       if (changes.brandName !== undefined && !changes.brandName) {
-        reject(new Error('brandName no puede estar vacío'));
-        return;
+        throw new Error('brandName no puede estar vacío');
       }
 
-      const patchedBrand = {
-        ...global.brands[index],
-        ...changes
-      };
-      global.brands[index] = patchedBrand;
-      resolve(patchedBrand);
-    });
+      const patchedBrand = await Brand.findByIdAndUpdate(
+        id,
+        { $set: changes },
+        { new: true, runValidators: true }
+      );
+
+      if (!patchedBrand) {
+        throw new Error('Marca no encontrada');
+      }
+
+      return patchedBrand;
+    } catch (error) {
+      throw new Error('Error al actualizar marca: ' + error.message);
+    }
   }
 
   async deleteBrand(id) {
-    return new Promise((resolve, reject) => {
-      const index = global.brands.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Marca no encontrada'));
-        return;
-      }
-
-      const hasAssociatedProducts = global.products.some(product => product.brandId === id);
+    try {
+      const hasAssociatedProducts = await Product.exists({ brandId: id });
       if (hasAssociatedProducts) {
-        reject(new Error('No se puede eliminar la marca porque tiene productos asociados'));
-        return;
+        throw new Error('No se puede eliminar la marca porque tiene productos asociados');
       }
 
-      const deletedBrand = global.brands.splice(index, 1)[0];
-      resolve(deletedBrand);
-    });
+      const deletedBrand = await Brand.findByIdAndDelete(id);
+
+      if (!deletedBrand) {
+        throw new Error('Marca no encontrada');
+      }
+
+      return deletedBrand;
+    } catch (error) {
+      throw new Error('Error al eliminar marca: ' + error.message);
+    }
   }
 }
 

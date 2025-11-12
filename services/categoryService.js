@@ -1,101 +1,109 @@
+const Category = require('../models/Category'); // Asegúrate de que la ruta sea correcta
+const Product = require('../models/Product');
+
 class CategoriesService {
   constructor() {
-    console.log('CategoriesService inicializado');
+    console.log('CategoriesService inicializado con MongoDB');
   }
 
   async getCategories() {
-    return new Promise((resolve) => {
-      resolve(global.categories);
-    });
+    try {
+      const categories = await Category.find();
+      return categories;
+    } catch (error) {
+      throw new Error('Error al obtener categorías: ' + error.message);
+    }
   }
 
   async getCategoryById(id) {
-    return new Promise((resolve) => {
-      const category = global.categories.find(item => item.id === id);
-      resolve(category || null);
-    });
+    try {
+      const category = await Category.findById(id);
+      return category || null;
+    } catch (error) {
+      throw new Error('Error al obtener categoría: ' + error.message);
+    }
   }
 
   async createCategory(categoryData) {
-    return new Promise((resolve, reject) => {
+    try {
       if (!categoryData.categoryName) {
-        reject(new Error('categoryName es requerido'));
-        return;
+        throw new Error('categoryName es requerido');
       }
 
-      const newCategory = {
-        id: String(global.categories.length + 1),
+      const newCategory = new Category({
         categoryName: categoryData.categoryName,
         description: categoryData.description || '',
         active: categoryData.active !== undefined ? categoryData.active : true
-      };
+      });
 
-      global.categories.push(newCategory);
-      resolve(newCategory);
-    });
+      await newCategory.save();
+      return newCategory;
+    } catch (error) {
+      throw new Error('Error al crear categoría: ' + error.message);
+    }
   }
 
   async updateCategory(id, changes) {
-    return new Promise((resolve, reject) => {
-      const index = global.categories.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Categoría no encontrada'));
-        return;
-      }
-
+    try {
       if (changes.categoryName !== undefined && !changes.categoryName) {
-        reject(new Error('categoryName es requerido'));
-        return;
+        throw new Error('categoryName es requerido');
       }
 
-      const updatedCategory = {
-        ...global.categories[index],
-        ...changes
-      };
-      global.categories[index] = updatedCategory;
-      resolve(updatedCategory);
-    });
+      const updatedCategory = await Category.findByIdAndUpdate(
+        id,
+        changes,
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedCategory) {
+        throw new Error('Categoría no encontrada');
+      }
+
+      return updatedCategory;
+    } catch (error) {
+      throw new Error('Error al actualizar categoría: ' + error.message);
+    }
   }
 
   async patchCategory(id, changes) {
-    return new Promise((resolve, reject) => {
-      const index = global.categories.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Categoría no encontrada'));
-        return;
-      }
-
+    try {
       if (changes.categoryName !== undefined && !changes.categoryName) {
-        reject(new Error('categoryName no puede estar vacío'));
-        return;
+        throw new Error('categoryName no puede estar vacío');
       }
 
-      const patchedCategory = {
-        ...global.categories[index],
-        ...changes
-      };
-      global.categories[index] = patchedCategory;
-      resolve(patchedCategory);
-    });
+      const patchedCategory = await Category.findByIdAndUpdate(
+        id,
+        { $set: changes },
+        { new: true, runValidators: true }
+      );
+
+      if (!patchedCategory) {
+        throw new Error('Categoría no encontrada');
+      }
+
+      return patchedCategory;
+    } catch (error) {
+      throw new Error('Error al actualizar categoría: ' + error.message);
+    }
   }
 
   async deleteCategory(id) {
-    return new Promise((resolve, reject) => {
-      const index = global.categories.findIndex(item => item.id === id);
-      if (index === -1) {
-        reject(new Error('Categoría no encontrada'));
-        return;
-      }
-
-      const hasAssociatedProducts = global.products.some(product => product.categoryId === id);
+    try {
+      const hasAssociatedProducts = await Product.exists({ categoryId: id });
       if (hasAssociatedProducts) {
-        reject(new Error('No se puede eliminar la categoría porque tiene productos asociados'));
-        return;
+        throw new Error('No se puede eliminar la categoría porque tiene productos asociados');
       }
 
-      const deletedCategory = global.categories.splice(index, 1)[0];
-      resolve(deletedCategory);
-    });
+      const deletedCategory = await Category.findByIdAndDelete(id);
+
+      if (!deletedCategory) {
+        throw new Error('Categoría no encontrada');
+      }
+
+      return deletedCategory;
+    } catch (error) {
+      throw new Error('Error al eliminar categoría: ' + error.message);
+    }
   }
 }
 
